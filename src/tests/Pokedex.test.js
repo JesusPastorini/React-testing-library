@@ -4,14 +4,15 @@ import renderWithRouter from '../renderWithRouter';
 import pokemonType from '../data';
 
 describe('Teste do componente Pokedex', () => {
-  it('Deve ter um heading h2 com o texto Encontered Pokémon', () => {
+  beforeEach(() => {
     renderWithRouter(<App />);
+  });
+  it('Deve ter um heading h2 com o texto Encontered Pokémon', () => {
     const heading = screen.getByRole('heading', { name: /encountered pokémon/i });
     expect(heading).toBeInTheDocument();
   });
 
   test('Exibe o próximo Pokémon da lista quando o botão Próximo Pokémon é clicado', () => {
-    renderWithRouter(<App />);
     // Localizar o botão e clicá-lo
     const nextButton = screen.getByRole('button', { name: /próximo pokémon/i });
     fireEvent.click(nextButton);
@@ -40,13 +41,11 @@ describe('Teste do componente Pokedex', () => {
   });
 
   it('Deve renderizar apenas um Pokémon de cada vez.', () => {
-    const { queryAllByTestId } = renderWithRouter(<App />);
-    const pokemons = queryAllByTestId('pokemon-name');
+    const pokemons = screen.queryAllByTestId('pokemon-name');
     expect(pokemons.length).toBe(1);
   });
 
   test('Deve existir um botão de filtragem para cada tipo de Pokémon, sem repetição', () => {
-    renderWithRouter(<App />);
     const pokemonTypes = [...new Set(pokemonType.map((tp) => tp.type))];
 
     const buttonElements = screen.getAllByTestId('pokemon-type-button');
@@ -64,14 +63,13 @@ describe('Teste do componente Pokedex', () => {
       fireEvent.click(allButton);
     });
 
-    expect(screen.queryAllByTestId('pokemon-type-button').length).toBe(pokemonTypes.length);
+    expect(buttonElements.length).toBe(pokemonTypes.length);
     // botão all sempre visivel
     const allButton = screen.getByRole('button', { name: /all/i });
     expect(allButton).toBeVisible();
   });
 
   test('Botão All reseta o filtro corretamente', () => {
-    renderWithRouter(<App />);
     const allButton = screen.getByRole('button', { name: /all/i });
     expect(allButton).toBeInTheDocument();
     // Verifica se o filtro "All" está selecionado por padrão ao carregar a página
@@ -83,5 +81,21 @@ describe('Teste do componente Pokedex', () => {
     expect(pokemonName).toHaveTextContent('Pikachu');
     fireEvent.click(allButton);
     expect(pokemonName).toHaveTextContent('Pikachu');
+  });
+  it('Teste se a Pokédex contém um botão para resetar o filtro', () => {
+    const resetButton = screen.getByRole('button', { name: /all/i });
+    const filterBtn = screen.getAllByTestId('pokemon-type-button');
+
+    fireEvent.click(filterBtn[0]);
+    fireEvent.click(resetButton);
+    expect(screen.getByText(pokemonType[0].name)).toBeInTheDocument();
+
+    fireEvent.click(filterBtn[1]);
+    fireEvent.click(resetButton);
+    expect(screen.getByText(pokemonType[0].name)).toBeInTheDocument();
+
+    fireEvent.click(filterBtn[2]);
+    fireEvent.click(resetButton);
+    expect(screen.getByText(pokemonType[0].name)).toBeInTheDocument();
   });
 });
